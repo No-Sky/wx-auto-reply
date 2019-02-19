@@ -1,3 +1,4 @@
+#-*-coding:utf8-*-
 import itchat
 from itchat.content import *
 import time, datetime
@@ -239,12 +240,3 @@ if __name__ == '__main__':
     itchat.auto_login(hotReload=True)
     itchat.send("【系统消息】系统已开启，默认是全部好友就自动回复，指定好友时将关闭全部好友回复", toUserName='filehelper')
     itchat.run()
-
-
-
-
-
-
-
-
-

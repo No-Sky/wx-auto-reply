@@ -1,3 +1,4 @@
+#-*-coding:utf8-*-
 import itchat
 from pyecharts import Bar,Pie,Geo,Map
 import re
