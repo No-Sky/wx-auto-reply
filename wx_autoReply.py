@@ -21,6 +21,14 @@ PREFIX_CONTENT="[自动回复]"
 REPLY_DICT={}
 #延迟回复字典
 DELAY_REPLY_DICT={}
+#定时器开关
+TIMER_SEND=False
+#定时器时间间隔，单位：秒
+TINER_INTERVAL=60
+#指定好友自动回复开关
+SWITCH_REPLY_SINGLE=False
+#指定好友昵称
+FRIEND_NAME=""
 
 
 
@@ -33,6 +41,10 @@ def auto_reply(msg):
     global PREFIX_CONTENT
     global REPLY_DICT
     global DELAY_REPLY_DICT
+    global TIMER_SEND
+    global TIMER_INTERVAL
+    global SWITCH_REPLY_SINGLE
+    global FRIEND_NAME
 
     if msg['ToUserName']=='filehelper':
         args=re.compile(' ').split(msg['Text'])
@@ -51,6 +63,10 @@ def auto_reply(msg):
                 9./delay set [T]    设置延迟时间
                 10./dict set [F] [T] 定制好友回复
                 11./dict show [F]    显示好友回复
+                12./timer on(待续)        打开消息定时器
+                13./timer off(待续)       关闭消息定时器
+                14./timer to [F](待续)    指定进行定时发送
+                15./switch to [F]   指定好友开启自动回复
                 '''
 
             elif args[0]=='/switch':
@@ -61,6 +77,14 @@ def auto_reply(msg):
                 elif args[1]=='off':
                     SWITCH_REPLY=False
                     reply_content="【系统消息】自动回复已关闭"
+
+                elif args[1]=='to':
+                	if not SWITCH_REPLY:
+                		reply_content="请先打开自动回复开关"
+                	else:
+                		SWITCH_REPLY_SINGLE=True
+                		FRIEND_NAME = args[2]
+                		reply_content="【系统消息】指定好友自动回复已开启，如需关闭，直接使用关闭自动回复开关"
 
                 else:
                     reply_content="【系统消息】未知指令"
@@ -108,9 +132,17 @@ def auto_reply(msg):
                     reply_content="【系统消息】好友["+args[2]+"的自动回复已设置为："+REPLY_DICT[args[2]]
                 else:
                     reply_content = "【系统消息】未知指令"
+
+            elif args[0]=='/timer':
+            	if args[1]=='on':
+            		#定时器开启代码
+            		reply_content = "【系统消息】尚未开发"
+            	elif args[1]=='off':
+            		#定时器关闭代码
+            		reply_content = "【系统消息】尚未开发"
+
             else:
                 reply_content = "【系统消息】未知指令"
-
 
         except:
             reply_content="【系统消息】系统异常"
@@ -133,20 +165,27 @@ def auto_reply(msg):
             reply_content=REPLY_DICT[nickName]
             #判断自动回复开关
             if SWITCH_REPLY:
-                #判断延时回复开关
-                if SWITCH_DELAY:
-                    localtime = time.time()
-                    DELAY_REPLY_DICT[nickName]=[localtime,msg['FromUserName']]
-                    print (DELAY_REPLY_DICT)
 
-                if not SWITCH_DELAY:
+            	#判断指定好友回复开关
+            	if SWITCH_REPLY_SINGLE and nickName==FRIEND_NAME:
+                	print (nickName + "==========" + FRIEND_NAME)
+    				#发送消息
+                	itchat.send(reply_content + getResponse(msg["Text"])["text"], toUserName=msg['FromUserName'])
+
+                #判断延时回复开关
+            	if SWITCH_DELAY:
+                	localtime = time.time()
+                	DELAY_REPLY_DICT[nickName]=[localtime,msg['FromUserName']]
+                	print (DELAY_REPLY_DICT)
+
+            	if not SWITCH_DELAY and not SWITCH_REPLY_SINGLE:
                     #判断消息前缀开关
-                    if SWITCH_PREFIX:
-                        reply_content = PREFIX_CONTENT + REPLY_DICT[nickName] + getResponse(msg["Text"])["text"]
-                    else:
-                        reply_content = REPLY_DICT[nickName] + getResponse(msg["Text"])["text"]
+                	if SWITCH_PREFIX:
+                		reply_content = PREFIX_CONTENT + REPLY_DICT[nickName]
+                	else:
+                		reply_content = REPLY_DICT[nickName]
                     #发送消息
-                    itchat.send(reply_content, toUserName=msg['FromUserName'])
+                	itchat.send(reply_content + getResponse(msg["Text"])["text"], toUserName=msg['FromUserName'])
 
 
 
@@ -198,10 +237,8 @@ if __name__ == '__main__':
     # timer3 = threading.Timer(60, timer_send)
     # timer3.start()
     itchat.auto_login(hotReload=True)
+    itchat.send("【系统消息】系统已开启，默认是全部好友就自动回复，指定好友时将关闭全部好友回复", toUserName='filehelper')
     itchat.run()
-
-
-
 
 
 
